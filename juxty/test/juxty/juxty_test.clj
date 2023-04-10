@@ -118,12 +118,13 @@
   ([b n]
    (take n (random-walk b))))
 
+(defn reset [b]
+  (reset! (:position b) 0)
+  (reset! (:events b) [])
+  (reset! (:cmds b) []))
+
 (deftest side-effecting-movement
   (let [juxty (->JuxtySE (atom 0) (atom []) (atom []))
-        reset (fn [b]
-                (reset! (:position b) 0)
-                (reset! (:events b) [])
-                (reset! (:cmds b) []))
         walk-length (+ 5 (rand-int 6))]
     (testing "combinations"
       (reset juxty)
@@ -143,10 +144,6 @@
 
 (deftest observability-movement
   (let [juxty (->JuxtySE' (atom 0) (atom []) (atom []))
-        reset (fn [b]
-                (reset! (:position b) 0)
-                (reset! (:events b) [])
-                (reset! (:cmds b) []))
         walk-length (+ 5 (rand-int 6))]
     (testing "combinations"
       (reset juxty)
@@ -167,10 +164,6 @@
 
 (deftest hydration
   (let [juxty (->JuxtySE' (atom 0) (atom []) (atom []))
-        reset (fn [b]
-                (reset! (:position b) 0)
-                (reset! (:events b) [])
-                (reset! (:cmds b) []))
         walk-length (+ 10 (rand-int 10))]
     (testing "full hydration"
       (reset juxty)
@@ -207,10 +200,6 @@
 
 (deftest temporal
   (let [juxty (->JuxtySE' (atom 0) (atom []) (atom []))
-        reset (fn [b]
-                (reset! (:position b) 0)
-                (reset! (:events b) [])
-                (reset! (:cmds b) []))
         walk-length (+ 10 (rand-int 10))]
     (testing "position-in-time-query"
       (reset juxty)
