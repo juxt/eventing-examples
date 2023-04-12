@@ -1,8 +1,7 @@
 (ns juxty.juxty-evolved-test
   (:require [clojure.test :as t :refer [deftest is testing]]
             [juxty.juxty-evolved :as sut :refer [bot-cmd-handler
-                                                 bot-event-handler
-                                                 producer]]))
+                                                 bot-event-handler]]))
 
 (defn bot-db
   []
@@ -15,6 +14,15 @@
          :bluxy {:bot-id :bluxy
                  :position 2
                  :created-at 1681201516105}}))
+
+(defn produce-to!
+  [events event]
+  (swap! events conj event))
+
+(defn producer
+  [events]
+  (fn [event]
+    (produce-to! events event)))
 
 (deftest bot-cmd-handler-test
   (with-redefs [sut/external-fail? (constantly false)]

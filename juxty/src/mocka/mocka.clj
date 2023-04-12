@@ -1,11 +1,11 @@
-(ns mocka.mocka)
+(ns mocka.mocka
+  (:require [clojure.pprint :refer [pprint]]))
 
 (defn producer
   "Returns a function that adds messages to a specific topic"
   [topic]
   (fn [& v]
-    (swap! topic #(apply conj % v))
-    nil))
+    (swap! topic #(apply conj % v))))
 
 (defn consumer
   "Returns a function that returns the next message on a specific topic.
@@ -34,7 +34,8 @@
   ([x]
    (peek "" x))
   ([s x]
-   (println (str s x))
+   (println s)
+   (pprint x)
    x))
 
 (defmacro builder

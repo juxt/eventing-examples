@@ -37,15 +37,6 @@
           :created-at (System/currentTimeMillis)}
          event))
 
-(defn produce-to!
-  [events event]
-  (swap! events conj event))
-
-(defn producer
-  [events]
-  (fn [event] 
-    (produce-to! events event)))
-
 (defn bot-cmd-handler
   [cmd state producer]
   (let [{:keys [type cmd-id bot-id]} cmd]
