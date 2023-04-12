@@ -5,7 +5,7 @@
 ;; command handler
 (defn bot-found?
   [state bot-id]
-  (boolean (get state bot-id)))
+  (boolean (get @state bot-id)))
 
 (defn bot-not-found?
   [state bot-id]
@@ -13,7 +13,7 @@
 
 (defn get-bot-position
   [state bot-id]
-  @(get-in state [bot-id :position]))
+  (get-in @state [bot-id :position]))
 
 (defn external-fail?
   []
@@ -55,7 +55,7 @@
                        :error [:external-service-says-no]})
       (case type
         :create
-        (if (bot-found? @state bot-id)
+        (if (bot-found? state bot-id)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:bot-already-found bot-id]})
@@ -67,11 +67,11 @@
                              :originating-cmd-id cmd-id})))
         :move-left
         (cond
-          (bot-not-found? @state bot-id)
+          (bot-not-found? state bot-id)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:bot-not-found bot-id]})
-          (<= (get-bot-position @state bot-id) -2)
+          (<= (get-bot-position state bot-id) -2)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:out-of-bounds :left]})
@@ -84,11 +84,11 @@
                              :originating-cmd-id cmd-id})))
         :move-right
         (cond
-          (bot-not-found? @state bot-id)
+          (bot-not-found? state bot-id)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:bot-not-found bot-id]})            
-          (>= (get-bot-position @state bot-id) 2)
+          (>= (get-bot-position state bot-id) 2)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:out-of-bounds :right]})
@@ -103,13 +103,12 @@
 (defn create-bot
   [state {:keys [bot-id position created-at] :as _event}]
   (swap! state assoc bot-id {:bot-id bot-id
-                             :position (atom position)
+                             :position position
                              :created-at created-at}))
 
 (defn move-bot
   [state {:keys [bot-id delta] :as _event}]
-  (let [position (get-in @state [bot-id :position])]
-    (swap! position (fn [x] (+ x delta)))))
+  (swap! state update-in [bot-id :position] (fn [x] (+ x delta))))
 
 (defn bot-event-handler
   [event state]

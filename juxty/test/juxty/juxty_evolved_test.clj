@@ -4,20 +4,22 @@
                                                  bot-event-handler
                                                  producer]]))
 
-(def bot-db (atom {:juxty {:bot-id :juxty
-                           :position (atom 0)
-                           :created-at 1681201515402}
-                   :cruxy {:bot-id :cruxy
-                           :position (atom -2)
-                           :created-at 1681201515983}
-                   :bluxy {:bot-id :bluxy
-                           :position (atom 2)
-                           :created-at 1681201516105}}))
+(defn bot-db
+  []
+  (atom {:juxty {:bot-id :juxty
+                 :position 0
+                 :created-at 1681201515402}
+         :cruxy {:bot-id :cruxy
+                 :position -2
+                 :created-at 1681201515983}
+         :bluxy {:bot-id :bluxy
+                 :position 2
+                 :created-at 1681201516105}}))
 
 (deftest bot-cmd-handler-test
   (with-redefs [sut/external-fail? (constantly false)]
     (let [bot-events (atom [])
-          state bot-db
+          state (bot-db)
           producer (producer bot-events)
           run-cmd (fn [cmd] (-> cmd
                                 (bot-cmd-handler state producer)
@@ -108,7 +110,7 @@
 
 (deftest bot-event-handler-test
   (with-redefs [sut/external-fail? (constantly false)]
-    (let [state bot-db
+    (let [state (bot-db)
           apply-event (fn [event] (-> event
                                       (bot-event-handler state)))]
       (testing "creation"
@@ -116,13 +118,13 @@
                       :bot-id :xtdby
                       :position 0
                       :created-at 1681287092438})
-        (is (= 0 @(get-in @state [:xtdby :position]))))
+        (is (= 0 (get-in @state [:xtdby :position]))))
       (testing "movement"
         (apply-event {:type :movement
                       :bot-id :xtdby
                       :delta 1
                       :created-at 1681287092438})
-        (is (= 1 @(get-in @state [:xtdby :position])))
+        (is (= 1 (get-in @state [:xtdby :position])))
         (doall (map apply-event [{:type :movement
                                   :bot-id :xtdby
                                   :delta 1
@@ -135,6 +137,6 @@
                                   :bot-id :xtdby
                                   :delta -1
                                   :created-at 1681287092440}]))
-        (is (= 0 @(get-in @state [:xtdby :position])))))))
+        (is (= 0 (get-in @state [:xtdby :position])))))))
 
 
