@@ -109,7 +109,7 @@
 (defn move-bot
   [state {:keys [bot-id delta] :as _event}]
   (let [position (get-in @state [bot-id :position])]
-    (swap! position (fn [x] [+ x delta]))))
+    (swap! position (fn [x] (+ x delta)))))
 
 (defn bot-event-handler
   [event state]
@@ -119,4 +119,3 @@
       (create-bot state event)
       :movement
       (move-bot state event))))
-

@@ -1,6 +1,8 @@
 (ns juxty.juxty-evolved-test
   (:require [clojure.test :as t :refer [deftest is testing]]
-            [juxty.juxty-evolved :as sut :refer [bot-cmd-handler producer]]))
+            [juxty.juxty-evolved :as sut :refer [bot-cmd-handler
+                                                 bot-event-handler
+                                                 producer]]))
 
 (def bot-db (atom {:juxty {:bot-id :juxty
                            :position (atom 0)
@@ -103,3 +105,36 @@
                  :delta 1
                  :originating-cmd-id 1002}]
                (mapv (fn [e] (dissoc e :event-id :created-at)) @bot-events)))))))
+
+(deftest bot-event-handler-test
+  (with-redefs [sut/external-fail? (constantly false)]
+    (let [state bot-db
+          apply-event (fn [event] (-> event
+                                      (bot-event-handler state)))]
+      (testing "creation"
+        (apply-event {:type :creation
+                      :bot-id :xtdby
+                      :position 0
+                      :created-at 1681287092438})
+        (is (= 0 @(get-in @state [:xtdby :position]))))
+      (testing "movement"
+        (apply-event {:type :movement
+                      :bot-id :xtdby
+                      :delta 1
+                      :created-at 1681287092438})
+        (is (= 1 @(get-in @state [:xtdby :position])))
+        (doall (map apply-event [{:type :movement
+                                  :bot-id :xtdby
+                                  :delta 1
+                                  :created-at 1681287092438}
+                                 {:type :movement
+                                  :bot-id :xtdby
+                                  :delta -1
+                                  :created-at 1681287092439}
+                                 {:type :movement
+                                  :bot-id :xtdby
+                                  :delta -1
+                                  :created-at 1681287092440}]))
+        (is (= 0 @(get-in @state [:xtdby :position])))))))
+
+
