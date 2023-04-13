@@ -38,6 +38,11 @@
    (pprint x)
    x))
 
+(defn wait
+  ([ms x]
+   (Thread/sleep ms)
+   x))
+
 (defmacro builder
   "Expects a list of bindings and a function to execute.  
   The function will run every 100ms in it's own thread."
@@ -46,5 +51,14 @@
     (future
       (let ~form
         (while true
-          (Thread/sleep 100)
+          (Thread/sleep 200)
           ~@body)))))
+
+(defn l2f
+  "Last to first helper for thread last"
+  ([f a b]
+   (f b a))
+  ([f a b c]
+   (f c a b))
+  ([f a b c d]
+   (f d a b c)))
