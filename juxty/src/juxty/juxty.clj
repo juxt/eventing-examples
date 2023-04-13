@@ -190,8 +190,7 @@
 (defn hydrate
   ([b events]
    (reset! (:position b) 0) ;; for convenience
-   (dorun (map (fn [e] (apply-event b e))
-               events)))
+   (run! (fn [e] (apply-event b e)) events))
   ([b events n]
    (hydrate b (take n events))))
 
