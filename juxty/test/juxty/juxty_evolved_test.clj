@@ -29,8 +29,7 @@
     (let [bot-events (atom [])
           state (bot-db)
           producer (producer bot-events)
-          run-cmd (fn [cmd] (-> cmd
-                                (bot-cmd-handler state producer)
+          run-cmd (fn [cmd] (-> (bot-cmd-handler state producer cmd)
                                 (dissoc :cmd-response-id :created-at)))]
       (testing "create"
         (is (= {:status :success
@@ -119,8 +118,7 @@
 (deftest bot-event-handler-test
   (with-redefs [sut/external-fail? (constantly false)]
     (let [state (bot-db)
-          apply-event (fn [event] (-> event
-                                      (bot-event-handler state)))]
+          apply-event (fn [event] (bot-event-handler state event))]
       (testing "creation"
         (apply-event {:type :creation
                       :bot-id :xtdby

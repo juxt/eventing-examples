@@ -38,7 +38,7 @@
          event))
 
 (defn bot-cmd-handler
-  [cmd state producer]
+  [state producer cmd]
   (let [{:keys [type cmd-id bot-id]} cmd]
     (if (external-fail?)
       (->cmd-response {:status :failure
@@ -91,21 +91,21 @@
             (->cmd-response {:status :success
                              :originating-cmd-id cmd-id})))))))
 
-(defn create-bot
+(defn create-bot!
   [state {:keys [bot-id position created-at] :as _event}]
   (swap! state assoc bot-id {:bot-id bot-id
                              :position position
                              :created-at created-at}))
 
-(defn move-bot
+(defn move-bot!
   [state {:keys [bot-id delta] :as _event}]
   (swap! state update-in [bot-id :position] (fn [x] (+ x delta))))
 
 (defn bot-event-handler
-  [event state]
+  [state event]
   (let [{:keys [type]} event]
     (case type
       :creation
-      (create-bot state event)
+      (create-bot! state event)
       :movement
-      (move-bot state event))))
+      (move-bot! state event))))
