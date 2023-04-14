@@ -2,10 +2,11 @@
   (:require [clojure.pprint :refer [pprint]]))
 
 (defn producer
-  "Returns a function that adds messages to a specific topic"
+  "Returns a function that adds a message to a specific topic"
   [topic]
-  (fn [& v]
-    (swap! topic #(apply conj % v))))
+  (fn [v]
+    (swap! topic conj v)
+    v))
 
 (defn consumer
   "Returns a function that returns the next message on a specific topic.
@@ -21,8 +22,8 @@
 
 (defn to
   "From a topic config use the producer fn to add a message"
-  [topic-config & v]
-  (apply (:producer topic-config) v))
+  [topic-config v]
+  ((:producer topic-config) v))
 
 (defn from
   "From a topic config use the consumer fn to read the next message"  

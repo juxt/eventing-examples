@@ -14,7 +14,9 @@
 (deftest consumer-test
   (let [events-topic (atom [])
         event-producer (producer events-topic)]
-    (event-producer 1 2 3)
+    (event-producer 1)
+    (event-producer 2)
+    (event-producer 3)
     (testing "single consumer"
       ;; consumer off the topic 1-by-1
       (let [event-consumer (consumer events-topic)]
@@ -32,7 +34,9 @@
         events {:topic events-topic
                 :producer (producer events-topic)
                 :consumer (consumer events-topic 0)}]
-    (to events 1 2 3)
+    (to events 1)
+    (to events 2)
+    (to events 3)
     (testing "to and from a topic configuration"
       (is (= 1 (from events)))
       (is (= 2 (from events)))
@@ -69,7 +73,9 @@
                                (* 3)
                                (peek "Triple: ")
                                (to outputs)))]
-    (to events-1 1 2 3)
+    (to events-1 1)
+    (to events-1 2)
+    (to events-1 3)
     (Thread/sleep 1000)
     (testing "Transformation"
       (is (= [2 4 6] @outputs-topic-1))
