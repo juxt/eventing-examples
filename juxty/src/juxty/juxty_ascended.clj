@@ -57,6 +57,15 @@
   (and (f s1 v)
       (f s2 v)))
 
+(defn bot-event-handler
+  [state event]
+  (let [{:keys [type]} event]
+    (case type
+      :creation
+      (create-bot! state event)
+      :movement
+      (move-bot! state event))))
+
 (defn bot-cmd-handler
   [pending-state state producer cmd]
   (let [{:keys [type cmd-id bot-id]} cmd]
@@ -70,35 +79,33 @@
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:bot-already-found bot-id]})
-          (let [event (->bot-event {:type :creation
-                                    :bot-id bot-id
-                                    :position 0
-                                    :originating-cmd-id cmd-id})]
-            
-            (when (producer event)
-              (create-bot! pending-state event)
-              (->cmd-response {:status :success
-                               :originating-cmd-id cmd-id}))))
+          (when (->> (->bot-event {:type :creation
+                                   :bot-id bot-id
+                                   :position 0
+                                   :originating-cmd-id cmd-id})
+                     producer
+                     (bot-event-handler pending-state))
+            (->cmd-response {:status :success
+                             :originating-cmd-id cmd-id})))
         :move-left
         (cond
           (state-and bot-not-found? pending-state state bot-id)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:bot-not-found bot-id]})
-          (<= (state-or get-bot-position pending-state state bot-id)
-              -2)
+          (<= (state-or get-bot-position pending-state state bot-id) -2)
           (->cmd-response {:status :failure
                            :originating-cmd-id cmd-id
                            :error [:out-of-bounds :left]})
           :else
-          (let [event (->bot-event {:type :movement
-                                    :bot-id bot-id
-                                    :delta -1
-                                    :originating-cmd-id cmd-id})]
-            (when (producer event)
-              (move-bot! pending-state event)
-              (->cmd-response {:status :success
-                               :originating-cmd-id cmd-id}))))
+          (when (->> (->bot-event {:type :movement
+                                   :bot-id bot-id
+                                   :delta -1
+                                   :originating-cmd-id cmd-id})
+                     producer
+                     (bot-event-handler pending-state))
+            (->cmd-response {:status :success
+                             :originating-cmd-id cmd-id})))
         :move-right
         (cond
           (state-and bot-not-found? pending-state state bot-id)
@@ -110,23 +117,14 @@
                            :originating-cmd-id cmd-id
                            :error [:out-of-bounds :right]})
           :else
-          (let [event (->bot-event {:type :movement
-                                    :bot-id bot-id
-                                    :delta 1
-                                    :originating-cmd-id cmd-id})]
-            (when (producer event)
-              (move-bot! pending-state event)
-              (->cmd-response {:status :success
-                               :originating-cmd-id cmd-id}))))))))
-
-(defn bot-event-handler
-  [state event]
-  (let [{:keys [type]} event]
-    (case type
-      :creation
-      (create-bot! state event)
-      :movement
-      (move-bot! state event))))
+          (when (->> (->bot-event {:type :movement
+                                   :bot-id bot-id
+                                   :delta 1
+                                   :originating-cmd-id cmd-id})
+                     producer
+                     (bot-event-handler pending-state))
+            (->cmd-response {:status :success
+                             :originating-cmd-id cmd-id})))))))
 
 (defn hydrate
   ([state events]

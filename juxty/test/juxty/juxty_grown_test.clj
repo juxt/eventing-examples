@@ -1,4 +1,4 @@
-(ns juxty.juxty-evolved-test
+(ns juxty.juxty-grown-test
   (:require [clojure.test :as t :refer [deftest is testing]]
             [juxty.juxty-evolved :as sut :refer [bot-cmd-handler
                                                  bot-event-handler

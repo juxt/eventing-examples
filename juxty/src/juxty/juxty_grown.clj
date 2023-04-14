@@ -1,4 +1,4 @@
-(ns juxty.juxty-evolved
+(ns juxty.juxty-grown
   (:require
    [clojure.string]))
 
@@ -37,16 +37,6 @@
           :created-at (System/currentTimeMillis)}
          event))
 
-(defn produce-to!
-  [events event]
-  (swap! events conj event)
-  event)
-
-(defn producer
-  [events]
-  (fn [event]
-    (produce-to! events event)))
-
 (defn create-bot!
   [state {:keys [bot-id position created-at] :as _event}]
   (swap! state assoc bot-id {:bot-id bot-id
@@ -83,8 +73,7 @@
                                    :bot-id bot-id
                                    :position 0
                                    :originating-cmd-id cmd-id})
-                     producer
-                     (bot-event-handler state))
+                     producer)
             (->cmd-response {:status :success
                              :originating-cmd-id cmd-id})))
         :move-left
@@ -102,8 +91,7 @@
                                    :bot-id bot-id
                                    :delta -1
                                    :originating-cmd-id cmd-id})
-                     producer
-                     (bot-event-handler state))
+                     producer)
             (->cmd-response {:status :success
                              :originating-cmd-id cmd-id})))
         :move-right
@@ -121,7 +109,13 @@
                                    :bot-id bot-id
                                    :delta 1
                                    :originating-cmd-id cmd-id})
-                     producer
-                     (bot-event-handler state))
+                     producer)
             (->cmd-response {:status :success
                              :originating-cmd-id cmd-id})))))))
+
+(defn hydrate
+  ([state events]
+   (hydrate state events (count @events)))
+  ([state events n]
+   (reset! state {})
+   (run! (fn [event] (bot-event-handler state event)) (take n @events))))

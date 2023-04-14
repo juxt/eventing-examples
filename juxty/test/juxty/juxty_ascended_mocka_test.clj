@@ -31,9 +31,8 @@
                              (some->> (from events)
                                       (bot-event-handler state)))]
       (testing "Quick succession commands results in success: can move immediately after creation"
-        (to cmds
-            {:type :create :cmd-id 1003 :bot-id :boxy}
-            {:type :move-left :cmd-id 1004 :bot-id :boxy})
+        (to cmds {:type :create :cmd-id 1003 :bot-id :boxy})
+        (to cmds {:type :move-left :cmd-id 1004 :bot-id :boxy})
         (Thread/sleep 1000)
         (is (= [{:type :create, :cmd-id 1003, :bot-id :boxy}
                 {:type :move-left, :cmd-id 1004, :bot-id :boxy}]
@@ -55,9 +54,8 @@
                (map (fn [e] (dissoc e :event-id :created-at))
                     (take-last 2 @(:topic events))))))
       (testing "Quick succession commands maintains consistency: successive creation fails"
-        (to cmds
-            {:type :create :cmd-id 1005 :bot-id :grixy}
-            {:type :create :cmd-id 1006 :bot-id :grixy})
+        (to cmds {:type :create :cmd-id 1005 :bot-id :grixy})
+        (to cmds {:type :create :cmd-id 1006 :bot-id :grixy})
         (Thread/sleep 1000)
         (is (= [{:type :create, :cmd-id 1005, :bot-id :grixy}
                 {:type :create, :cmd-id 1006, :bot-id :grixy}]
