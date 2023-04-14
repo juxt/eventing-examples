@@ -62,3 +62,10 @@
    (f c a b))
   ([f a b c d]
    (f d a b c)))
+
+(defn ->topic-config
+  []
+  (let [topic (atom [])]
+    {:topic topic
+     :consumer (consumer topic 0)
+     :producer (producer topic)}))
