@@ -1,9 +1,8 @@
 (ns juxty.juxty-grown-mocka-test
-  (:require [clojure.test :as t :refer [deftest is testing]]
-            [juxty.juxty-grown :as sut :refer [bot-cmd-handler
-                                                 bot-event-handler]]
-            [mocka.mocka :as mocka :refer [to from producer consumer builder peek wait
-                                           ->topic-config]]))
+  (:require
+   [clojure.test :as t :refer [deftest is testing]]
+   [juxty.juxty-grown :as sut :refer [bot-cmd-handler bot-event-handler]]
+   [mocka.mocka :as mocka :refer [->topic-config builder from to wait]]))
 
 (deftest juxty-grown-via-mocka
   (with-redefs [sut/external-fail? (constantly false)]
@@ -83,20 +82,20 @@
                 {:type :create, :cmd-id 1006, :bot-id :grixy}]
                (take-last 2 @(:topic cmds))))
         (is (= [{:status :success,
-                    :originating-cmd-id 1005}
-                   {:status :success
-	            :originating-cmd-id 1006}]
-                  (map (fn [e] (dissoc e :cmd-response-id :created-at))
-                       (take-last 2 @(:topic cmd-responses)))))
+                 :originating-cmd-id 1005}
+                {:status :success
+	         :originating-cmd-id 1006}]
+               (map (fn [e] (dissoc e :cmd-response-id :created-at))
+                    (take-last 2 @(:topic cmd-responses)))))
         (is (= [{:type :creation,
-                    :bot-id :grixy,
-                    :position 0,
-                    :originating-cmd-id 1005}
-                   {:type :creation,
-                    :bot-id :grixy,
-                    :position 0,
-                    :originating-cmd-id 1006}]
-                  (map (fn [e] (dissoc e :event-id :created-at))
-                       (take-last 2 @(:topic events))))))
+                 :bot-id :grixy,
+                 :position 0,
+                 :originating-cmd-id 1005}
+                {:type :creation,
+                 :bot-id :grixy,
+                 :position 0,
+                 :originating-cmd-id 1006}]
+               (map (fn [e] (dissoc e :event-id :created-at))
+                    (take-last 2 @(:topic events))))))
       (future-cancel @cmd-app)
       (future-cancel @event-app))))

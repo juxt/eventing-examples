@@ -20,6 +20,12 @@
          (swap! offset inc)
          result)))))
 
+(defn consumer-last
+  "Returns a function that returns the next message on a specific topic.
+   Optionally pass the intial offset."
+  ([topic]
+   (consumer topic (dec (count @topic)))))
+
 (defn to
   "From a topic config use the producer fn to add a message"
   [topic-config v]
@@ -30,10 +36,10 @@
   [topic-config]
   ((:consumer topic-config)))
 
-(defn peek
+(defn peek'
   "Print the value of x and return the value"
   ([x]
-   (peek "" x))
+   (peek' "" x))
   ([s x]
    (println s)
    (pprint x)

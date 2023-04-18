@@ -79,8 +79,9 @@
           (is (not= old-state new-state))
           (is (= {} new-state))
           (hydrate state (:topic events))
-          (is (= old-state @state))
-          (clojure.pprint/pprint @state)))
+          (is (= old-state @state))))
       
       (future-cancel @cmd-app)
       (future-cancel @event-app))))
+
+

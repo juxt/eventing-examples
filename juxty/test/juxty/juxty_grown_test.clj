@@ -1,8 +1,8 @@
 (ns juxty.juxty-grown-test
-  (:require [clojure.test :as t :refer [deftest is testing]]
-            [juxty.juxty-evolved :as sut :refer [bot-cmd-handler
-                                                 bot-event-handler
-                                                 producer]]))
+  (:require
+   [clojure.test :as t :refer [deftest is testing]]
+   [juxty.juxty-evolved :as sut :refer [bot-cmd-handler bot-event-handler
+                                        producer]]))
 
 (defn bot-db
   []

@@ -1,15 +1,9 @@
 (ns juxty.juxty-test
-  (:require [clojure.test :as t :refer [deftest is testing]]
-            [juxty.juxty :as sut :refer [left right 
-                                         ->Juxty
-                                         ->JuxtyBounded
-                                         ->JuxtyCommand
-                                         ->JuxtyES
-                                         ->JuxtyCS
-                                         ->JuxtySE
-                                         ->JuxtySE'
-                                         hydrate
-                                         position-at-time]]))
+  (:require
+   [clojure.test :as t :refer [deftest is testing]]
+   [juxty.juxty :as sut :refer [->Juxty ->JuxtyBounded ->JuxtyCommand
+                                ->JuxtyCS ->JuxtyES ->JuxtySE ->JuxtySE' hydrate left
+                                position-at-time right]]))
 
 (deftest movement
   (let [juxty (->Juxty (atom 0))]
@@ -139,8 +133,7 @@
         (is (= position
                (reduce + (map :delta @(:events juxty)))))
         (is (and (>= position -2)
-                 (<= position 2)))
-        (clojure.pprint/pprint juxty)))))
+                 (<= position 2)))))))
 
 (deftest observability-movement
   (let [juxty (->JuxtySE' (atom 0) (atom []) (atom []))
@@ -159,8 +152,7 @@
         (is (= position
                (reduce + (map :delta @(:events juxty)))))
         (is (and (>= position -2)
-                 (<= position 2)))
-        (clojure.pprint/pprint juxty)))))
+                 (<= position 2)))))))
 
 (deftest hydration
   (let [juxty (->JuxtySE' (atom 0) (atom []) (atom []))
@@ -179,8 +171,7 @@
       (let [events @(:events juxty)]
         (testing "First event"
           (hydrate juxty events 1)
-          (is (= @(:position juxty)  (-> events first :delta)))
-          (clojure.pprint/pprint juxty))
+          (is (= @(:position juxty)  (-> events first :delta))))
         (testing "5th event"
           (hydrate juxty events 5)
           (is (= @(:position juxty)
@@ -212,5 +203,4 @@
                                   events))]
         (hydrate juxty events halfway-event-count)
         (is (= @(:position juxty)
-             (position-at-time juxty halfway-time)))
-        (clojure.pprint/pprint juxty)))))
+             (position-at-time juxty halfway-time)))))))

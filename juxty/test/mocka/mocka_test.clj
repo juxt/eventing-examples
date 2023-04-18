@@ -1,6 +1,7 @@
 (ns mocka.mocka-test
-  (:require [mocka.mocka :as sut :refer [producer consumer to from peek builder]]
-            [clojure.test :as t :refer [deftest is testing]]))
+  (:require
+   [clojure.test :as t :refer [deftest is testing]]
+   [mocka.mocka :as sut :refer [builder consumer from producer to]]))
 
 (deftest producer-test
   (let [events-topic (atom [])
@@ -64,14 +65,12 @@
                        outputs outputs-1]
                       (some->> (from events)
                                (* 2)
-                               (peek "Double: ")
                                (to outputs-1)))
         ;; Create an app that listens on the events topic (different consumer) and triples to outputs-2
         app2 (builder [events events-2
                        outputs outputs-2]
                       (some->> (from events)
                                (* 3)
-                               (peek "Triple: ")
                                (to outputs)))]
     (to events-1 1)
     (to events-1 2)
