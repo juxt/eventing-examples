@@ -1,7 +1,7 @@
 (ns mocka.mocka-test
   (:require
    [clojure.test :as t :refer [deftest is testing]]
-   [mocka.mocka :as sut :refer [builder consumer from producer to]]))
+   [mocka.mocka :as sut :refer [builder consumer from producer to wait]]))
 
 (deftest producer-test
   (let [events-topic (atom [])
@@ -70,12 +70,13 @@
         app2 (builder [events events-2
                        outputs outputs-2]
                       (some->> (from events)
+                               (wait 500)
                                (* 3)
                                (to outputs)))]
     (to events-1 1)
     (to events-1 2)
     (to events-1 3)
-    (Thread/sleep 1000)
+    (Thread/sleep 3000)
     (testing "Transformation"
       (is (= [2 4 6] @outputs-topic-1))
       (is (= [3 6 9] @outputs-topic-2)))

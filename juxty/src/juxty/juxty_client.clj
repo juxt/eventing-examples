@@ -34,7 +34,7 @@
   (= :responded (get-response-status state cmd-id)))
 
 (defn run-cmd
-  [submit-topic-config state cmd]
+  [state submit-topic-config cmd]
   (let [producer (:producer submit-topic-config)
         cmd-id (:cmd-id cmd)
         max-attempts 10]
@@ -52,7 +52,7 @@
         (do (Thread/sleep 200)
             (recur (cmd-responded? state cmd-id) (inc attempt)))))))
 
-(defmacro do-cmd->
+(defmacro do-cmds->
   [expr & forms]
   (let [g (gensym)
         steps (map (fn [step] `(if (cmd-unsuccessful? ~g)
@@ -71,13 +71,13 @@
     (map first)))
 
 (defn retry-cmd
-  [f cmd]
-  (let [max-attempts 5]
-    (loop [response (f cmd)
+  [f topic cmd]
+  (let [max-attempts 6]
+    (loop [response (f topic cmd)
            attempt 0]
       (if (or (>= attempt max-attempts)
               (cmd-successful? response))
         response
-        (do (Thread/sleep (* 500 (nth fib attempt)))
-            (recur (f (assoc cmd :cmd-id (random-uuid)))
+        (do (Thread/sleep (* 1000 (nth fib attempt)))
+            (recur (f topic (assoc cmd :cmd-id (random-uuid)))
                    (inc attempt)))))))

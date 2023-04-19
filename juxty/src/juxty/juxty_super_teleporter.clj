@@ -1,4 +1,4 @@
-(ns juxty.juxty-teleporter)
+(ns juxty.juxty-super-teleporter)
 
 (defn ->bot-event
   [event]
@@ -30,12 +30,18 @@
   [state {:keys [bot-id new-position] :as _event}]
   (swap! state assoc-in [bot-id :position] new-position))
 
+(defn create-bot!
+  [state {:keys [bot-id created-at] :as _event}]
+  (swap! state assoc bot-id {:bot-id bot-id
+                             :created-at created-at}))
 (defn bot-event-handler
   [state event]
   (let [{:keys [type]} event]
     (case type
       :teleport
       (teleport-bot! state event)
+      :creation
+      (create-bot! state event)
       state)))
 
 (defn bot-cmd-handler

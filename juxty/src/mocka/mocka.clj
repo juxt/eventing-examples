@@ -71,8 +71,32 @@
    (f d a b c)))
 
 (defn ->topic-config
-  []
-  (let [topic (atom [])]
-    {:topic topic
-     :consumer (consumer topic 0)
-     :producer (producer topic)}))
+  ([]
+   (->topic-config (atom [])))
+  ([topic]
+   {:topic topic
+    :consumer (consumer topic 0)
+    :producer (producer topic)}))
+
+;; some more advanced things
+
+(defn queue
+  ([] (clojure.lang.PersistentQueue/EMPTY))
+  ([coll]
+   (reduce conj clojure.lang.PersistentQueue/EMPTY coll)))
+
+(defn ->merge
+  ([]
+   (->merge (atom (queue))))
+  ([q] 
+   (fn [t1 t2]
+     (let [v (peek @q)]
+       (cond
+         v (do (when t1 (swap! q conj t1))
+               (when t2 (swap! q conj t2))
+               (swap! q pop)
+               v)
+         (and t1 t2) (do (swap! q conj t2)
+                         t1)
+         t1 t1
+         t2 t2)))))
