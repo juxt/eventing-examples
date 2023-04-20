@@ -16,16 +16,18 @@
                            (some->> (from cmds)
                                     (bot-cmd-handler state (:producer events))
                                     (to cmd-responses)))]
-      (testing "Appropriately spaced commands"
+      (testing "Multiple sequential commands and the bounded invariant"
         ;; send commands
         (to cmds {:type :create :cmd-id 1000 :bot-id :xtdby})
         (to cmds {:type :move-left :cmd-id 1001 :bot-id :xtdby})
         (to cmds {:type :move-left :cmd-id 1002 :bot-id :xtdby})
+        (to cmds {:type :move-left :cmd-id 1003 :bot-id :xtdby})
         (Thread/sleep 1000)
         ;; results
         (is (= [{:type :create, :cmd-id 1000, :bot-id :xtdby}
                 {:type :move-left :cmd-id 1001 :bot-id :xtdby}
-                {:type :move-left :cmd-id 1002 :bot-id :xtdby}]
+                {:type :move-left :cmd-id 1002 :bot-id :xtdby}
+                {:type :move-left :cmd-id 1003 :bot-id :xtdby}]
                @(:topic cmds))
             "Command topic as expected")
         (is (= [{:status :success
@@ -33,7 +35,10 @@
                 {:status :success
                  :originating-cmd-id 1001}
                 {:status :success
-                 :originating-cmd-id 1002}]
+                 :originating-cmd-id 1002}
+                {:status :failure
+                 :originating-cmd-id 1003
+                 :error [:out-of-bounds :left]}]
                (map (fn [e] (dissoc e :cmd-response-id :created-at)) @(:topic cmd-responses)))
             "Command responses as expected")
         (is (= [{:type :creation

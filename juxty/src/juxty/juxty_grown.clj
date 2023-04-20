@@ -93,24 +93,6 @@
                                    :originating-cmd-id cmd-id})
                      producer)
             (->cmd-response {:status :success
-                             :originating-cmd-id cmd-id})))
-        :move-right
-        (cond
-          (bot-not-found? state bot-id)
-          (->cmd-response {:status :failure
-                           :originating-cmd-id cmd-id
-                           :error [:bot-not-found bot-id]})            
-          (>= (get-bot-position state bot-id) 2)
-          (->cmd-response {:status :failure
-                           :originating-cmd-id cmd-id
-                           :error [:out-of-bounds :right]})
-          :else
-          (when (->> (->bot-event {:type :movement
-                                   :bot-id bot-id
-                                   :delta 1
-                                   :originating-cmd-id cmd-id})
-                     producer)
-            (->cmd-response {:status :success
                              :originating-cmd-id cmd-id})))))))
 
 (defn hydrate

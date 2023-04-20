@@ -11,10 +11,7 @@
                  :created-at 1681201515402}
          :cruxy {:bot-id :cruxy
                  :position -2
-                 :created-at 1681201515983}
-         :bluxy {:bot-id :bluxy
-                 :position 2
-                 :created-at 1681201516105}}))
+                 :created-at 1681201515983}}))
 
 (deftest bot-cmd-handler-test
   (with-redefs [sut/external-fail? (constantly false)]
@@ -58,24 +55,6 @@
                  :delta -1
                  :originating-cmd-id 1000}]
                (mapv (fn [e] (dissoc e :event-id :created-at)) @bot-events))))
-      (testing "move-right"
-        (reset! bot-events [])
-        (is (= {:status :success
-                :originating-cmd-id 1000}
-               (run-cmd {:type :move-right
-                         :cmd-id 1000
-                         :bot-id :juxty})))
-        (is (= {:status :failure
-                :originating-cmd-id 1001
-                :error [:out-of-bounds :right]}
-               (run-cmd {:type :move-right
-                         :cmd-id 1001
-                         :bot-id :bluxy})))
-        (is (= [{:type :movement
-                 :bot-id :juxty
-                 :delta 1
-                 :originating-cmd-id 1000}]
-               (mapv (fn [e] (dissoc e :event-id :created-at)) @bot-events))))
       (testing "multiple-cmds"
         (reset! bot-events [])
         (reset! state {})
@@ -86,12 +65,12 @@
                          :bot-id :xtdby})))
         (is (= {:status :success
                 :originating-cmd-id 1001}
-               (run-cmd {:type :move-right
+               (run-cmd {:type :move-left
                          :cmd-id 1001
                          :bot-id :xtdby})))
         (is (= {:status :success
                 :originating-cmd-id 1002}
-               (run-cmd {:type :move-right
+               (run-cmd {:type :move-left
                          :cmd-id 1002
                          :bot-id :xtdby})))
         (is (= [{:type :creation
@@ -100,11 +79,11 @@
                  :originating-cmd-id 1000}
                 {:type :movement
                  :bot-id :xtdby
-                 :delta 1
+                 :delta -1
                  :originating-cmd-id 1001}
                 {:type :movement
                  :bot-id :xtdby
-                 :delta 1
+                 :delta -1
                  :originating-cmd-id 1002}]
                (mapv (fn [e] (dissoc e :event-id :created-at)) @bot-events)))))))
 
@@ -121,21 +100,17 @@
       (testing "movement"
         (apply-event {:type :movement
                       :bot-id :xtdby
-                      :delta 1
+                      :delta -1
                       :created-at 1681287092438})
-        (is (= 1 (get-in @state [:xtdby :position])))
+        (is (= -1 (get-in @state [:xtdby :position])))
         (run! apply-event [{:type :movement
                             :bot-id :xtdby
-                            :delta 1
+                            :delta -1
                             :created-at 1681287092438}
                            {:type :movement
                             :bot-id :xtdby
                             :delta -1
-                            :created-at 1681287092439}
-                           {:type :movement
-                            :bot-id :xtdby
-                            :delta -1
-                            :created-at 1681287092440}])
-        (is (= 0 (get-in @state [:xtdby :position])))))))
+                            :created-at 1681287092439}])
+        (is (= -3 (get-in @state [:xtdby :position])))))))
 
 

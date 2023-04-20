@@ -38,6 +38,7 @@
                                        (to cmd-responses)))
           tp-event-app (builder [events tp-events]
                                 (some->> (from events)
+                                         (wait 200)
                                          (tp/bot-event-handler state)))
           ;; Client
           client-response-state (atom {})
@@ -64,7 +65,6 @@
                        (run-cmd mv-cmds {:type :create :cmd-id 1003 :bot-id :boxy})
                        (run-cmd tp-cmds {:type :teleport :cmd-id 1004 :bot-id :boxy :new-position 55}))
                       (dissoc :cmd-response-id :created-at))))
-        (Thread/sleep 1000)
         (is (not= 55 (mv/get-bot-position state :boxy))))
       (testing "Separate services have broken write consistency - work around with client retries
                 What else can be done?"
