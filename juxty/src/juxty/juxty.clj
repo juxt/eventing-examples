@@ -1,106 +1,110 @@
 (ns juxty.juxty)
 
-(defprotocol Bot
-  "Bot commands"
-  (left [b] "Move left")
-  (right [b] "Move right")
-  (instantiate [b] "Instantiate"))
+;; Single Bot state of position
+;; {:position 0}
 
-;; Trivial Implementation
-(defrecord Juxty [position]
-  ;; Position is an atom to maintain the positional state
-  Bot
-  (left [b] (update b :position (fn [x] (swap! x dec))))
-  (right [b] (update b :position (fn [x] (swap! x inc)))))
+(defn move-left [b]
+  (update b :position dec))
 
-;; Bounded evolution
-;; always success
-(defn binc
-  "bounded inc"
-  [x]
-  (if (>= x 2)
-    x
-    (inc x)))
+(defn move-right [b]
+  (update b :position inc))
 
-(defn bdec
-  "bounded inc"
-  [x]
-  (if (<= x -2)
-    x
-    (dec x)))
+(defn left! [b]
+  (if (> (:position @b) -2)
+    (swap! b move-left)
+    @b))
 
-(defrecord JuxtyBounded [position]
-  Bot
-  (left [b] (update b :position (fn [x] (swap! x bdec))))
-  (right [b] (update b :position (fn [x] (swap! x binc)))))
+(defn right! [b]
+  (if (< (:position @b) 2)
+    (swap! b move-right)
+    @b))
 
-;; Command evolution
-;; Introducing command failure
-(defrecord JuxtyCommand [position]
-  Bot
-  (left [b] (let [position (:position b)]
-              (if (> @position -2)
-                (do (swap! position dec)
-                    :success)
-                :failure)))
-  (right [b] (let [position (:position b)]
-               (if (< @position 2)
-                 (do (swap! position inc)
-                     :success)
-                 :failure))))
+(defn left-cmd! [b]
+  (if (> (:position @b) -2)
+    (do (swap! b move-left)
+        :success)
+    :failure))
+
+(defn right-cmd! [b]
+  (if (< (:position @b) 2)
+    (do (swap! b move-right)
+        :success)
+    :failure))
+
+(defn create-bot-cmd
+  []
+  (atom {:position 0}))
 
 ;; Event Sourcing
-(defn new-event
-  [events event]
+(def events (atom []))
+
+(defn to-events
+  [event]
   (swap! events conj event)
   event)
 
 (defn apply-event
   [b event]
-  (let [position (:position b)
-        delta (:delta event)]
-    (swap! position (fn [x] (+ x delta)))
+  (let [delta (:delta event)]
+    (swap! b update :position (partial + delta))
     :success))
 
-(defrecord JuxtyES [position events]
-  Bot
-  (left [b] (let [position (:position b)]
-              (if (<= @position -2)
-                :failure
-                (->> (new-event events {:delta -1})
-                     (apply-event b)))))
-  (right [b] (let [position (:position b)]
-              (if (>= @position 2)
-                :failure
-                (->> (new-event events {:delta 1})
-                     (apply-event b))))))
+(defn left-es! [b]
+  (if (> (:position @b) -2)
+    (->> {:type :movement
+          :delta -1}
+         to-events
+         (apply-event b))
+    :failure))
+
+(defn right-es! [b]
+  (if (< (:position @b) 2)
+    (->> {:type :movement
+          :delta 1}
+         to-events
+         (apply-event b))
+    :failure))
 
 ;; Command Sourcing
-(def new-cmd new-event)
+(def cmds (atom []))
+
+(defn to-cmds
+  [cmd]
+  (swap! cmds conj cmd)
+  cmd)
 
 (defn apply-cmd
   [b cmd]
-  (let [position (:position b)
-        events (:events b)
-        type (:type cmd)]
-    (case type
-      :move-left
-      (if (> @position -2)
-        (->> (new-event events {:delta -1})
-             (apply-event b))
-        :failure)
-      :move-right
-      (if (< @position 2)
-        (->> (new-event events {:delta 1})
-             (apply-event b))
-        :failure))))
+  (case (:type cmd)
+    :move-left
+    (if (> (:position @b) -2)
+      (->> {:type :movement
+            :delta -1}
+           to-events
+           (apply-event b))
+      :failure)
+    :move-right
+    (if (< (:position @b) 2)
+      (->> {:type :movement
+            :delta 1}
+           to-events
+           (apply-event b))
+      :failure)))
 
-(defrecord JuxtyCS [position cmds events]
-  Bot
-  (left [b] (->> (new-cmd cmds {:type :move-left})
-                 (apply-cmd b)))
-  (right [b] (->> (new-cmd cmds {:type :move-right})
-                 (apply-cmd b))))
+(defn left-cs! [b]
+  (->> {:type :move-left}
+       to-cmds
+       (apply-cmd b)))
+
+(defn right-cs! [b]
+  (->> {:type :move-right}
+       to-cmds
+       (apply-cmd b)))
+
+(defn reset-bot! [b]
+  (reset! b {:position 0})
+  (reset! events [])
+  (reset! cmds []))
 
 ;; Side effecting
 (defn external-true-or-false []
@@ -111,93 +115,114 @@
       Integer.
       (= 1)))
 
-(defn apply-cmd-se
+(defn apply-se-cmd
   [b cmd]
-  (let [position (:position b)
-        events (:events b)
-        type (:type cmd)]
-    (case type
-      :move-left
-      (if (and (> @position -2)
-               (external-true-or-false))
-        (->> (new-event events {:delta -1})
-             (apply-event b))
-        :failure)
-      :move-right
-      (if (and (< @position 2)
-               (external-true-or-false))
-        (->> (new-event events {:delta 1})
-             (apply-event b))
-        :failure))))
+  (case (:type cmd)
+    :move-left
+    (if (and (external-true-or-false)
+             (> (:position @b) -2))
+      (->> {:type :movement
+            :delta -1}
+           to-events
+           (apply-event b))
+      :failure)
+    :move-right
+    (if (and (external-true-or-false)
+             (< (:position @b) 2))
+      (->> {:type :movement
+            :delta 1}
+           to-events
+           (apply-event b))
+      :failure)))
 
-(defrecord JuxtySE [position cmds events]
-  Bot
-  (left [b] (->> (new-cmd cmds {:type :move-left})
-                 (apply-cmd-se b)))
-  (right [b] (->> (new-cmd cmds {:type :move-right})
-                 (apply-cmd-se b))))
+(defn left-se! [b]
+  (->> {:type :move-left}
+       to-cmds
+       (apply-se-cmd b)))
 
-;; Observability
+(defn right-se! [b]
+  (->> {:type :move-right}
+       to-cmds
+       (apply-se-cmd b)))
 
-(defn new-event'
-  [events event]
-  (swap! events conj (merge {:event-id (random-uuid)
-                             :created-at (System/currentTimeMillis)}
-                            event))
-  event)
+(defn left-or-right []
+  (if (= 0 (rand-int 2))
+    left-se!
+    right-se!))
 
-(defn new-cmd'
-  [cmds cmd]
-  (swap! cmds conj (merge {:cmd-id (random-uuid)
-                           :created-at (System/currentTimeMillis)}
-                          cmd))
-  cmd)
+(defn left-or-right-seq []
+  (lazy-seq (cons (left-or-right) (left-or-right-seq))))
 
-(defn apply-cmd-se'
-  [b cmd]
-  (let [position (:position b)
-        events (:events b)
-        type (:type cmd)
-        id (:id cmd)]
-    (case type
-      :move-left
-      (if (and (> @position -2)
-               (external-true-or-false))
-        (->> (new-event' events {:type :movement
-                                 :delta -1
-                                 :originating-cmd-id id})
-             (apply-event b))
-        :failure)
-      :move-right
-      (if (and (< @position 2)
-               (external-true-or-false))
-        (->> (new-event' events {:type :movement
-                                 :delta 1
-                                 :originating-cmd-id id})
-             (apply-event b))
-        :failure))))
-
-(defrecord JuxtySE' [position cmds events]
-  Bot
-  (left [b] (->> (new-cmd' cmds {:type :move-left
-                                 :id (random-uuid)})
-                 (apply-cmd-se' b)))
-  (right [b] (->> (new-cmd' cmds {:type :move-right
-                                  :id (random-uuid)})
-                 (apply-cmd-se' b))))
+(defn random-walk
+  ([b]
+   (map (fn [f] (f b)) (left-or-right-seq)))
+  ([b n]
+   (take n (random-walk b))))
 
 ;; Hydration
 (defn hydrate
   ([b events]
-   (reset! (:position b) 0) ;; for convenience
    (run! (fn [e] (apply-event b e)) events))
   ([b events n]
    (hydrate b (take n events))))
 
-;; Temporal Queries
+  ;; Temporal Queries
 (defn position-at-time
   [b time]
   (let [events @(:events b)]
     (reduce + 
             (map :delta
                  (take-while (fn [e] (< (:created-at e) time)) events)))))
+(comment
+
+  ;; Observability
+
+  (defn new-event'
+    [events event]
+    (swap! events conj (merge {:event-id (random-uuid)
+                               :created-at (System/currentTimeMillis)}
+                              event))
+    event)
+
+  (defn new-cmd'
+    [cmds cmd]
+    (swap! cmds conj (merge {:cmd-id (random-uuid)
+                             :created-at (System/currentTimeMillis)}
+                            cmd))
+    cmd)
+
+  (defn apply-cmd-se'
+    [b cmd]
+    (let [position (:position b)
+          events (:events b)
+          type (:type cmd)
+          id (:id cmd)]
+      (case type
+        :move-left
+        (if (and (> @position -2)
+                 (external-true-or-false))
+          (->> (new-event' events {:type :movement
+                                   :delta -1
+                                   :originating-cmd-id id})
+               (apply-event b))
+          :failure)
+        :move-right
+        (if (and (< @position 2)
+                 (external-true-or-false))
+          (->> (new-event' events {:type :movement
+                                   :delta 1
+                                   :originating-cmd-id id})
+               (apply-event b))
+          :failure))))
+
+  (defrecord JuxtySE' [position cmds events]
+    Bot
+    (move-left [b] (->> (new-cmd' cmds {:type :move-left
+                                        :id (random-uuid)})
+                        (apply-cmd-se' b)))
+    (move-right [b] (->> (new-cmd' cmds {:type :move-right
+                                         :id (random-uuid)})
+                         (apply-cmd-se' b))))
+
+  
+  )
