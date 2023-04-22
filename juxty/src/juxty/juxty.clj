@@ -3,12 +3,14 @@
 ;; Single Bot state of position
 ;; {:position 0}
 
+;; Pure functions for moving left or right
 (defn move-left [b]
   (update b :position dec))
 
 (defn move-right [b]
   (update b :position inc))
 
+;; Movement functions over a Bot atom constrained between -2 and 2
 (defn left! [b]
   (if (> (:position @b) -2)
     (swap! b move-left)
@@ -19,21 +21,18 @@
     (swap! b move-right)
     @b))
 
-(defn left-cmd! [b]
+;; CQS Style - a command that performs an action
+(defn left-cqs! [b]
   (if (> (:position @b) -2)
     (do (swap! b move-left)
         :success)
     :failure))
 
-(defn right-cmd! [b]
+(defn right-cqs! [b]
   (if (< (:position @b) 2)
     (do (swap! b move-right)
         :success)
     :failure))
-
-(defn create-bot-cmd
-  []
-  (atom {:position 0}))
 
 ;; Event Sourcing
 (def events (atom []))
@@ -91,12 +90,12 @@
            (apply-event b))
       :failure)))
 
-(defn left-cs! [b]
+(defn left-cmd! [b]
   (->> {:type :move-left}
        to-cmds
        (apply-cmd b)))
 
-(defn right-cs! [b]
+(defn right-cmd! [b]
   (->> {:type :move-right}
        to-cmds
        (apply-cmd b)))
@@ -115,7 +114,7 @@
       Integer.
       (= 1)))
 
-(defn apply-se-cmd
+(defn apply-cmd'
   [b cmd]
   (case (:type cmd)
     :move-left
@@ -135,20 +134,20 @@
            (apply-event b))
       :failure)))
 
-(defn left-se! [b]
+(defn left-cmd!' [b]
   (->> {:type :move-left}
        to-cmds
-       (apply-se-cmd b)))
+       (apply-cmd' b)))
 
-(defn right-se! [b]
+(defn right-cmd!' [b]
   (->> {:type :move-right}
        to-cmds
-       (apply-se-cmd b)))
+       (apply-cmd' b)))
 
 (defn left-or-right []
   (if (= 0 (rand-int 2))
-    left-se!
-    right-se!))
+    left-cmd!'
+    right-cmd!'))
 
 (defn left-or-right-seq []
   (lazy-seq (cons (left-or-right) (left-or-right-seq))))

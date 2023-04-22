@@ -1,9 +1,9 @@
 (ns juxty.juxty-test
   (:require
    [clojure.test :as t :refer [deftest is testing]]
-   [juxty.juxty :as sut :refer [cmds events hydrate hydrate left! left-cmd!
-                                left-cs! left-es! left-se! position-at-time
-                                position-at-time random-walk reset-bot! right-es! right-se!]]))
+   [juxty.juxty :as sut :refer [cmds events hydrate hydrate left! left-cqs!
+                                left-cmd! left-es! left-cmd!' position-at-time
+                                position-at-time random-walk reset-bot! right-es! right-cmd!']]))
 
 (deftest juxty
   (testing
@@ -36,11 +36,11 @@
       a simple :success or :failure."
     (let [juxty (atom {:position 0})]
         (testing "Move Juxty left"
-          (is (= :success (left-cmd! juxty)))
+          (is (= :success (left-cqs! juxty)))
           (is (= -1 (:position @juxty))))
         (testing "Hitting the boundary"
           (reset! juxty {:position -2})
-          (is (= :failure (left-cmd! juxty)))
+          (is (= :failure (left-cqs! juxty)))
           (is (= -2 (:position @juxty)))))))
 
 #_(deftest juxty-command-ids
@@ -92,8 +92,8 @@
   (let [juxty (atom {:position 0})]
     (testing "left"
       (reset-bot! juxty)
-      (is (= :success (left-cs! juxty)))
-      (is (= :success (left-cs! juxty)))      
+      (is (= :success (left-cmd! juxty)))
+      (is (= :success (left-cmd! juxty)))      
       (is (= -2 (:position @juxty)))
       (is (= [{:type :movement
                :delta -1}
@@ -105,9 +105,9 @@
              @cmds)))
     (testing "3 left commands result in 2 events and 3 commands"
       (reset-bot! juxty)
-      (is (= :success (left-cs! juxty)))
-      (is (= :success (left-cs! juxty)))
-      (is (= :failure (left-cs! juxty)))
+      (is (= :success (left-cmd! juxty)))
+      (is (= :success (left-cmd! juxty)))
+      (is (= :failure (left-cmd! juxty)))
       (is (= -2 (:position @juxty)))
       (is (= [{:type :movement
                :delta -1}
@@ -125,9 +125,9 @@
         walk-length (+ 5 (rand-int 6))]
     (testing "combinations"
       (reset-bot! juxty)
-      (left-se! juxty)
-      (right-se! juxty)
-      (left-se! juxty)
+      (left-cmd!' juxty)
+      (right-cmd!' juxty)
+      (left-cmd!' juxty)
       (is (= [{:type :move-left}
               {:type :move-right}
               {:type :move-left}] @cmds)))
