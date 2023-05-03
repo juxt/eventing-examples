@@ -48,3 +48,19 @@ consistency fixed
 
     
 Between the 2 components we have shared state
+
+* Aggregate Root
+
+
+** Entities
+** Value Objects
+** Repositories
+** Aggregates
+** Domain Events
+
+#+begin_src clojure
+{:juxty {:position 0
+         :top-half :box
+         :bottom-half :wheels}
+#+end_src
+
