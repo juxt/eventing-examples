@@ -1,6 +1,6 @@
 (ns juxty.ddd.domain-test
   (:require [juxty.ddd.domain :as sut]
-            [clojure.test :refer [deftest testing is use-fixtures]]))
+            [clojure.test :refer [deftest is use-fixtures]]))
 
 (defn _uuids [] (lazy-seq (cons (random-uuid) (_uuids))))
 (def uuids (doall (take 100 (_uuids))))
@@ -26,7 +26,7 @@
   (is (= {:id (nth uuids 0)
           :upper :arms
           :lower :wheels
-          :repo-version 0}
+          :created-at-repo-version 0}
          (sut/create-bot :arms :wheels)))
   (is (nil? (sut/create-bot :legs :wheels)))
   (is (nil? (sut/create-bot :legs :legs)))
@@ -36,18 +36,18 @@
   (sut/save-to-repo (sut/create-bot :arms :legs))           ;; 0
   (sut/save-to-repo (sut/create-bot :tentacles :tracks))    ;; 1
   (sut/save-to-repo (sut/create-bot :manipulators :wheels)) ;; 2
-  (is (= {(nth uuids 0) {:id (nth uuids 0)
-                         :upper :arms
-                         :lower :legs
-                         :repo-version 0}
-          (nth uuids 1) {:id (nth uuids 1)
-                         :upper :tentacles
-                         :lower :tracks
-                         :repo-version 1}
-          (nth uuids 2) {:id (nth uuids 2)
-                         :upper :manipulators
-                         :lower :wheels
-                         :repo-version 2}
+  (is (= {:aggregates {(nth uuids 0) {:id (nth uuids 0)
+                                      :upper :arms
+                                      :lower :legs
+                                      :created-at-repo-version 0}
+                       (nth uuids 1) {:id (nth uuids 1)
+                                      :upper :tentacles
+                                      :lower :tracks
+                                      :created-at-repo-version 1}
+                       (nth uuids 2) {:id (nth uuids 2)
+                                      :upper :manipulators
+                                      :lower :wheels
+                                      :created-at-repo-version 2}}
           :version 3}
          @sut/repo)))
 
@@ -56,10 +56,10 @@
           sut/save-to-repo)
   (is (nil? (some-> (sut/create-bot :arms :legs)
                     sut/save-to-repo)))
-  (is (= {(nth uuids 0) {:id (nth uuids 0)
-                         :upper :arms
-                         :lower :legs
-                         :repo-version 0}
+  (is (= {:aggregates {(nth uuids 0) {:id (nth uuids 0)
+                                      :upper :arms
+                                      :lower :legs
+                                      :created-at-repo-version 0}}
           :version 1}
          @sut/repo)))
 
@@ -67,11 +67,11 @@
   (let [bot1 (sut/create-bot :arms :legs)
         bot2 (sut/create-bot :arms :legs)]
     (sut/save-to-repo bot1)
-    (sut/save-to-repo bot1)
     (sut/save-to-repo bot2)
-    (is (= {(nth uuids 0) {:id (nth uuids 0)
-                           :upper :arms
-                           :lower :legs
-                           :repo-version 0}
+    (sut/save-to-repo bot1)
+    (is (= {:aggregates {(nth uuids 0) {:id (nth uuids 0)
+                                        :upper :arms
+                                        :lower :legs
+                                        :created-at-repo-version 0}}
             :version 1}
            @sut/repo))))
