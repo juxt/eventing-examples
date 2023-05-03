@@ -20,14 +20,20 @@
      (:version repo)]))
 
 (defn save-to-repo [aggregate]
-  (when (== (:version @repo) (:created-at-repo-version aggregate))
-    (swap! repo (fn [repo]
-                  (-> repo
-                      (assoc-in [:aggregates (:id aggregate)] aggregate)
-                      (assoc :version (inc (:version repo))))))))
+  (let [id (:id aggregate)]
+    (cond
+      ;; create
+      (and (not (contains? (:aggregates @repo) id))
+           (== (:version @repo) (:created-at-repo-version aggregate)))
+      (swap! repo (fn [repo]
+                    (-> repo
+                        (assoc-in [:aggregates id] aggregate)
+                        (assoc :version (inc (:version repo))))))
+      ;; update
+      (contains? (:aggregates @repo) id)
+      (swap! repo assoc-in [:aggregates id] aggregate))))
 
 ;; Aggregates
-
 (s/def :bot/id uuid?)
 (s/def :bot/upper #{:arms :tentacles :manipulators})
 (s/def :bot/lower #{:wheels :tracks :legs})
