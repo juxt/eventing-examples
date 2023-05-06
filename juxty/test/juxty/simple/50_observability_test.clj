@@ -1,11 +1,12 @@
 (ns juxty.simple.50-observability-test
   (:require
    [clojure.test :as t :refer [deftest is testing]]
-   [juxty.simple.utils :refer [reset-bot! random-walk halfway-time-helper]]
    [juxty.simple.20-event-sourcing :refer [events]]
    [juxty.simple.30-cmd-sourcing :refer [cmds]]
    [juxty.simple.40-external-side-effects :as external]
-   [juxty.simple.50-observability :as sut :refer [left! right! hydrate position-at-time]]))
+   [juxty.simple.50-observability :as sut :refer [hydrate left!
+                                                  position-at-time right!]]
+   [juxty.simple.utils :refer [halfway-time-helper random-walk reset-bot]]))
 
 
 (deftest observability-movement
@@ -13,7 +14,7 @@
                      :id :the-eternal-bot})
         walk-length (+ 5 (rand-int 6))]
     (testing "combinations"
-      (reset-bot! juxty)
+      (reset-bot juxty)
       (left! juxty)
       (right! juxty)
       (left! juxty)
@@ -22,7 +23,7 @@
               {:action :move-left}]
              (into [] (map (fn [x] (select-keys x [:action]))) @cmds))))
     (testing "invariants"
-      (reset-bot! juxty)
+      (reset-bot juxty)
       (dorun (random-walk left! right! juxty walk-length))
       (let [position (:position @juxty)]
         (is (= position
@@ -35,7 +36,7 @@
     (let [juxty (atom {:position 0
                        :id :the-eternal-bot})]
       (testing "combinations"
-        (reset-bot! juxty)
+        (reset-bot juxty)
         (left! juxty :id 1001 :created-at 10000)
         (right! juxty :id 1002 :created-at 20000)
         (left! juxty :id 1003 :created-at 30000)
@@ -71,13 +72,13 @@
   (let [juxty (atom {:position 0})
         walk-length (+ 10 (rand-int 10))]
     (testing "full hydration"
-      (reset-bot! juxty)
+      (reset-bot juxty)
       (dorun (random-walk left! right! juxty walk-length))
       (let [current-position (:position @juxty)]
         (hydrate juxty @events)
         (is (= current-position (:position @juxty)))))
     (testing "point-in-time hydration"
-      (reset-bot! juxty)
+      (reset-bot juxty)
       (dorun (random-walk left! right! juxty walk-length))
       (testing "First event"
         (hydrate juxty @events 1)
@@ -92,7 +93,7 @@
   (let [juxty (atom {:position 0})
         walk-length (+ 10 (rand-int 10))]
     (testing "position-in-time-query"
-      (reset-bot! juxty)
+      (reset-bot juxty)
       (dorun (random-walk left! right! juxty walk-length))
       (let [halfway-time (halfway-time-helper)
             halfway-event-count (count

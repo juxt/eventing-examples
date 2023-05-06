@@ -4,7 +4,7 @@
    [juxty.juxty-ascended :as mv]
    [juxty.juxty-client :refer [do-cmds-> retry-cmd run-cmd update-response!]]
    [juxty.juxty-teleporter :as tp]
-   [mocka.mocka :as mocka :refer [->topic-config builder from to wait ->merge]]))
+   [mocka.core :as mocka :refer [->topic-config builder from to wait ->merge]]))
 
 (deftest juxty-seperate-services-with-shared-state
   (with-redefs [mv/external-fail? (constantly false)]
@@ -15,13 +15,15 @@
           mv-events (->topic-config)
           mv-cmds (->topic-config)
           mv-cmd-responses (->topic-config)
-          mv-cmd-app (builder [cmds mv-cmds
+          mv-cmd-app #_{:clj-kondo/ignore [:unresolved-symbol]}
+                     (builder [cmds mv-cmds
                                events mv-events
                                cmd-responses mv-cmd-responses]
                               (some->> (from cmds)
                                        (mv/bot-cmd-handler mv-pending-state state (:producer events))
                                        (to cmd-responses)))
-          mv-event-app (builder [events mv-events]
+          mv-event-app #_{:clj-kondo/ignore [:unresolved-symbol]}
+                       (builder [events mv-events]
                                 (some->> (from events)
                                          (wait 300)
                                          (mv/bot-event-handler state)))
@@ -30,13 +32,15 @@
           tp-events (->topic-config)
           tp-cmds (->topic-config)
           tp-cmd-responses (->topic-config)
-          tp-cmd-app (builder [cmds tp-cmds
+          tp-cmd-app #_{:clj-kondo/ignore [:unresolved-symbol]}
+                     (builder [cmds tp-cmds
                                events tp-events
                                cmd-responses tp-cmd-responses]
                               (some->> (from cmds)
                                        (tp/bot-cmd-handler tp-pending-state state (:producer events))
                                        (to cmd-responses)))
-          tp-event-app (builder [events tp-events]
+          tp-event-app #_{:clj-kondo/ignore [:unresolved-symbol]}
+                       (builder [events tp-events]
                                 (some->> (from events)
                                          (wait 200)
                                          (tp/bot-event-handler state)))

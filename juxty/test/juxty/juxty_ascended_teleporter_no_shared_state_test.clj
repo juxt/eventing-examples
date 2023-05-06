@@ -4,8 +4,10 @@
    [juxty.juxty-ascended :as mv]
    [juxty.juxty-client :refer [do-cmds-> retry-cmd run-cmd update-response!]]
    [juxty.juxty-super-teleporter :as tp]
-   [mocka.mocka :as mocka :refer [->topic-config builder from to wait ->merge consumer peek']]))
+   [mocka.core :as mocka :refer [->merge ->topic-config builder consumer from
+                                 to wait]]))
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (deftest juxty-seperate-services-no-shared-state
   (with-redefs [mv/external-fail? (constantly false)]
     (let [ ;; Movement and creation service
@@ -14,7 +16,8 @@
           mv-events (->topic-config)
           mv-cmds (->topic-config)
           mv-cmd-responses (->topic-config)
-          mv-cmd-app (builder [cmds mv-cmds
+          mv-cmd-app 
+                     (builder [cmds mv-cmds
                                events mv-events
                                cmd-responses mv-cmd-responses]
                               (some->> (from cmds)
@@ -62,22 +65,22 @@
         (Thread/sleep 2000)
         (is (= -1 (mv/get-bot-position mv-state :juxty))))
       (testing "Separate services have broken write consistency"
-          (is (= {:status :failure
-                  :originating-cmd-id 1004
-                  :error [:bot-not-found :boxy]}
-                 (-> (do-cmds->
-                      (run-cmd mv-cmds {:type :create :cmd-id 1003 :bot-id :boxy})
-                      (run-cmd tp-cmds {:type :teleport :cmd-id 1004 :bot-id :boxy :new-position 55}))
-                     (dissoc :cmd-response-id :created-at))))
-          (is (not= 55 (mv/get-bot-position tp-state :boxy))))
+        (is (= {:status :failure
+                :originating-cmd-id 1004
+                :error [:bot-not-found :boxy]}
+               (-> (do-cmds->
+                    (run-cmd mv-cmds {:type :create :cmd-id 1003 :bot-id :boxy})
+                    (run-cmd tp-cmds {:type :teleport :cmd-id 1004 :bot-id :boxy :new-position 55}))
+                   (dissoc :cmd-response-id :created-at))))
+        (is (not= 55 (mv/get-bot-position tp-state :boxy))))
       (testing "Separate services have broken write consistency - work around with client retries
                 What else can be done?"
-          (is (= {:status :success}
-                 (-> (do-cmds->
-                      (run-cmd mv-cmds {:type :create :cmd-id 1005 :bot-id :xtdby})
-                      (retry-cmd
-                       run-cmd tp-cmds {:type :teleport :cmd-id 1006 :bot-id :xtdby :new-position 55}))
-                     (dissoc :cmd-response-id :created-at :cmd-id :originating-cmd-id))))
-          (Thread/sleep 2000)
-          (is (= 55 (mv/get-bot-position tp-state :xtdby))))
+        (is (= {:status :success}
+               (-> (do-cmds->
+                    (run-cmd mv-cmds {:type :create :cmd-id 1005 :bot-id :xtdby})
+                    (retry-cmd
+                     run-cmd tp-cmds {:type :teleport :cmd-id 1006 :bot-id :xtdby :new-position 55}))
+                   (dissoc :cmd-response-id :created-at :cmd-id :originating-cmd-id))))
+        (Thread/sleep 2000)
+        (is (= 55 (mv/get-bot-position tp-state :xtdby))))
       (run! future-cancel [@mv-cmd-app @mv-event-app @tp-cmd-app @tp-event-app @client-app]))))

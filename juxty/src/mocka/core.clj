@@ -1,5 +1,11 @@
-(ns mocka.mocka
+(ns mocka.core
   (:require [clojure.pprint :refer [pprint]]))
+
+;; (extend-type clojure.lang.Ref
+;;   TopicConnection
+;;   (producer [this v]
+;;     (dosync ))
+;;     )
 
 (defn producer
   "Returns a function that adds a message to a specific topic"
@@ -85,6 +91,7 @@
   ([coll]
    (reduce conj clojure.lang.PersistentQueue/EMPTY coll)))
 
+
 (defn ->merge
   ([]
    (->merge (atom (queue))))
@@ -100,3 +107,4 @@
                          t1)
          t1 t1
          t2 t2)))))
+

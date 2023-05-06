@@ -1,5 +1,6 @@
 (ns juxty.ddd.domain
-  (:require [clojure.spec.alpha :as s]))
+  (:require
+   [clojure.spec.alpha :as s]))
 
 ;; Repository
 (def repo (atom {:version 0

@@ -35,7 +35,7 @@
                  :bot-id :xtdby
                  :position 0
                  :originating-cmd-id 1000}]
-               (mapv (fn [e] (dissoc e :event-id :created-at)) @bot-events)))
+               (mapv (fn [e] (dissoc e :epvent-id :created-at)) @bot-events)))
         (is (= 0 (get-in @state [:xtdby :position]))))
       (testing "move-left"
         (reset! bot-events [])

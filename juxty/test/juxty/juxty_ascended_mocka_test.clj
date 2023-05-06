@@ -3,7 +3,7 @@
    [clojure.test :as t :refer [deftest is testing]]
    [juxty.juxty-ascended :as sut :refer [bot-cmd-handler bot-event-handler
                                          hydrate]]
-   [mocka.mocka :as mocka :refer [->topic-config builder from to]]))
+   [mocka.core :as mocka :refer [->topic-config builder from to]]))
 
 
 (deftest state-logic-tests

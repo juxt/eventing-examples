@@ -1,6 +1,6 @@
 (ns juxty.juxty-client
   (:require
-   [mocka.mocka :as mocka :refer [to]]))
+   [mocka.core :as mocka :refer [to]]))
 
 (defn cmd-unsuccessful?
   [cmd-response]

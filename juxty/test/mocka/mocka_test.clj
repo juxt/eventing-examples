@@ -1,7 +1,7 @@
 (ns mocka.mocka-test
   (:require
    [clojure.test :as t :refer [deftest is testing]]
-   [mocka.mocka :as sut :refer [builder consumer from producer to wait]]))
+   [mocka.core :as sut :refer [builder consumer from producer to wait]]))
 
 (deftest producer-test
   (let [events-topic (atom [])
@@ -45,7 +45,7 @@
       (is (nil? (from events))))))
 
 (deftest builder-test
-  (let [;; Create the topics
+  (let [ ;; Create the topicsq
         events-topic (atom [])
         outputs-topic-1 (atom [])
         outputs-topic-2 (atom [])
@@ -61,18 +61,20 @@
         outputs-2 {:topic outputs-topic-2
                    :producer (producer outputs-topic-2)}
         ;; Create an app that listens on the events topic and doubles to outputs-1
-        app1 (builder [events events-1
-                       outputs outputs-1]
-                      (some->> (from events)
-                               (* 2)
-                               (to outputs-1)))
+        app1 #_{:clj-kondo/ignore [:unresolved-symbol]}
+        (builder [events events-1
+                  outputs outputs-1]
+                 (some->> (from events)
+                          (* 2)
+                          (to outputs-1)))
         ;; Create an app that listens on the events topic (different consumer) and triples to outputs-2
-        app2 (builder [events events-2
-                       outputs outputs-2]
-                      (some->> (from events)
-                               (wait 500)
-                               (* 3)
-                               (to outputs)))]
+        app2 #_{:clj-kondo/ignore [:unresolved-symbol]}
+        (builder [events events-2
+                  outputs outputs-2]
+                 (some->> (from events)
+                          (wait 500)
+                          (* 3)
+                          (to outputs)))]
     (to events-1 1)
     (to events-1 2)
     (to events-1 3)

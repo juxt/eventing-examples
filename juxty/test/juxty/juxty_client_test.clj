@@ -4,7 +4,7 @@
    [juxty.juxty-ascended :as sut :refer [bot-cmd-handler bot-event-handler
                                          get-bot-position]]
    [juxty.juxty-client :refer [do-cmds-> run-cmd update-response!]]
-   [mocka.mocka :as mocka :refer [->topic-config builder from to wait]]))
+   [mocka.core :as mocka :refer [->topic-config builder from to wait]]))
 
 (deftest juxty-client-test
   (with-redefs [sut/external-fail? (constantly false)]

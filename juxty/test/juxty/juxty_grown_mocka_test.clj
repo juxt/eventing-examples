@@ -2,7 +2,7 @@
   (:require
    [clojure.test :as t :refer [deftest is testing]]
    [juxty.juxty-grown :as sut :refer [bot-cmd-handler bot-event-handler]]
-   [mocka.mocka :as mocka :refer [->topic-config builder from to wait]]))
+   [mocka.core :as mocka :refer [->topic-config builder from to wait]]))
 
 (deftest juxty-grown-via-mocka
   (with-redefs [sut/external-fail? (constantly false)]
