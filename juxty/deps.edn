@@ -1,5 +1,5 @@
 {:deps
- {io.github.juxt/trip {:git/tag "v0.6.0" :git/sha "f88930f"}}
+ {io.github.juxt/trip {:git/tag "v0.7.0" :git/sha "912f7bc"}}
 
  :aliases
  {:test {:extra-paths ["test"]

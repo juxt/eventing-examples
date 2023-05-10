@@ -1,6 +1,7 @@
 (ns juxty.ddd.isolation
-  (:require [juxt.trip.core :as trip]
-            [clojure.test :refer [deftest is testing]]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [juxt.trip.core :as trip]))
 
 (def eventstore (trip/create-conn))
 
@@ -38,6 +39,7 @@
     (is (= {:foo 1 :bar 1} (trip/entity (trip/db eventstore) 1 )))))
 
 (def eventstore-ref (ref (trip/empty-db)))
+
 
 (extend-type clojure.lang.Ref
   trip/DbConnection
