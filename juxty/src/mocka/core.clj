@@ -60,7 +60,7 @@
        (into [])
        flatten
        (sort-by :offset)
-       (mapv #(dissoc % :db/id))))
+       (mapv #(dissoc % :db/id :db/type))))
 
 (deftest logstore-test
   (let [record-1 {:topic "foo"

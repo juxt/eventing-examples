@@ -77,7 +77,7 @@
             :nickname "Juxty"
             :version 1}
            (-> bot
-               (sut/give-nickname "Juxty"))))
+               (sut/set-nickname "Juxty"))))
     (is (= {:id (nth uuids 0)
             :upper :arms
             :lower :legs
@@ -85,9 +85,9 @@
             :nickname "Tripy"
             :version 2}
            (-> bot
-               (sut/give-nickname "Juxty")
-               (sut/give-nickname "Tripy"))))
-    (is (nil? (-> bot (sut/give-nickname 12345))))))
+               (sut/set-nickname "Juxty")
+               (sut/set-nickname "Tripy"))))
+    (is (nil? (-> bot (sut/set-nickname 12345))))))
 
 (deftest creation-consistency-test
   (let [bot1 (sut/create-bot :arms :legs) ;; different ids same body
@@ -104,8 +104,8 @@
 
 (deftest updating-consistency-test
   (let [bot0 (sut/create-bot :arms :legs)
-        bot1 (sut/give-nickname bot0 "Juxty")
-        bot2 (sut/give-nickname bot0 "XTDBY")]
+        bot1 (sut/set-nickname bot0 "Juxty")
+        bot2 (sut/set-nickname bot0 "XTDBY")]
     (sut/save-to-repo bot0)
     (sut/save-to-repo bot2)
     (sut/save-to-repo bot1) ;; does nothing

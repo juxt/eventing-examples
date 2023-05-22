@@ -75,7 +75,7 @@
       bot)))
 
 
-(defn give-nickname
+(defn set-nickname
   "Method"
   [bot nickname] ;; bot = this
   (let [bot (s/conform :bot/aggregate (some-> bot
